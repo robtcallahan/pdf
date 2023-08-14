@@ -8,6 +8,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Exception;
 
@@ -15,7 +16,7 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-    private static $types = [
+    private static array $types = [
         '11' => '11th Step Meditation',
         '12x12' => '12 Steps & 12 Traditions',
         'ASL' => 'American Sign Language',
@@ -83,10 +84,12 @@ class Controller extends BaseController
         // default input
         $json = request(
             'json',
-            'https://demo.code4recovery.org/wp-admin/admin-ajax.php?action=meetings'
+            // TODO: change back to default
+//            'https://demo.code4recovery.org/wp-admin/admin-ajax.php?action=meetings',
+            'https://blueridgeareaintergroup.org/wp-admin/admin-ajax.php?action=meetings'
         );
-        $width = request('width', 4.25);
-        $height = request('height', 11);
+        $width = request('width', 5.5);
+        $height = request('height', 8.5);
         $numbering = request('numbering', 1);
 
         // define options
@@ -118,11 +121,13 @@ class Controller extends BaseController
 
     public function pdf()
     {
-
         //parse input
         $json = request('json');
-        $width = floatval(request('width', 4.25)) * 72;
-        $height = floatval(request('height', 11)) * 72;
+//        $width = floatval(request('width', 4.25)) * 72;
+//        $height = floatval(request('height', 11)) * 72;
+        $width = floatval(request('width', 5.5)) * 96;
+        $height = floatval(request('height', 8.5)) * 72;
+
         $font = request('font') === 'sans-serif' ? 'Helvetica' : 'Georgia';
         $numbering = request('numbering', false);
         if ($numbering) $numbering = intval($numbering);
@@ -407,10 +412,15 @@ class Controller extends BaseController
             $days = $meetings->groupBy('day_formatted');
         }
 
-        //output PDF
-        $pdf = PDF::loadView('pdf', compact('days', 'font', 'numbering', 'group_by', 'types_in_use', 'regions', 'types', 'options'))
-            ->setPaper([0, 0, $width, $height]);
+        // output HTML
+//        return view('pdf', compact('days', 'font', 'numbering', 'group_by', 'types_in_use', 'regions', 'types', 'options'));
 
+        //output PD
+//        Log::info('height', ['height' => $height]);
+
+        $pdf = PDF::loadView('pdf', compact('days',
+            'font', 'numbering', 'group_by', 'types_in_use', 'regions', 'types', 'options'))
+            ->setPaper([0, 0, $width, $height]);
         return ($stream) ? $pdf->stream() : $pdf->download('directory.pdf');
     }
 }

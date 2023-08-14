@@ -18,9 +18,9 @@
                     {{ $meeting->regions_formatted }}
                 </div>
             @endif
-        </td>
-        <td class="types">
-            {{ implode(', ', $meeting->types) }}
+            <div class="types">
+                ({{ implode(', ', $meeting->types) }})
+            </div>
         </td>
     </tr>
 </table>

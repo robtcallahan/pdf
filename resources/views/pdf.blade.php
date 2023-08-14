@@ -1,26 +1,37 @@
 @php
+    // TODO: need to pass width from controller
+
+    use Illuminate\Support\Facades\Log;
+
     $page_margin = 18;
     $footer_height = 20;
+
+    $row = 1;
+    $column  = 1;
+    $num_column_lines = 0;
+
 @endphp
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type="text/css">
+    <title>AA Meetings Schedule</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <style>
         @page {
             margin: {{ $page_margin }}px;
 
             @if ($numbering !== false)
-                margin-bottom: {{ $footer_height + $page_margin }}px;
-            @endif
+                 margin-bottom: {{ $footer_height + $page_margin }}px;
+        @endif
+
         }
 
         body {
             color: black;
             counter-increment: page 1;
-            counter-reset: page {{ $numbering - 1 }};
+            counter-reset: page{{ $numbering - 1 }};
             font-family: {{ $font }};
             font-size: 12px;
         }
@@ -45,37 +56,23 @@
             page-break-after: always;
         }
 
-
-        @if ($group_by === 'region-day')
-            .region
-        @else
-            .day
-        @endif
-            {
-            page-break-after: always;
-        }
-
-        .legend>div {
+        .legend > div {
             font-size: 9px;
             border-bottom: .5px solid #ddd;
             padding-bottom: 1.5px;
             padding-top: 6px;
         }
 
-        .legend>div:last-child {
+        .legend > div:last-child {
             border-bottom: none;
         }
 
-        .legend>div span {
+        .legend > div span {
             display: inline-block;
         }
 
-        .legend>div .type {
+        .legend > div .type {
             width: 40px;
-        }
-
-        .day:last-child {
-            page-break-after: auto;
         }
 
         .meeting {
@@ -93,17 +90,24 @@
             vertical-align: top;
         }
 
-        .meeting .time,
-        .meeting .types {
+        .meeting .time {
             width: 65px;
-        }
-
-        .meeting .types {
             text-align: right;
+            padding-right: 5px;
         }
 
         .meeting .name {
             font-weight: bold;
+        }
+
+        .meeting-day {
+            border: 2px solid black;
+            margin: 20px 0;
+            padding: 4px;
+            text-align: center;
+        }
+        .meeting-day h1 {
+            font-size: 20px;
         }
 
         footer {
@@ -124,60 +128,120 @@
             text-align: center;
             width: 40px;
         }
+
+        /* Rob C */
+        .column {
+            float: left;
+            width: 30%;
+            margin: 0 10px 10px;
+        }
+
+        /* Clear floats after the columns */
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+            page-break-after: always;
+        }
     </style>
 </head>
 
 <body>
-    @if ($numbering !== false)
-        <footer></footer>
+@if ($numbering !== false)
+    <footer></footer>
+@endif
+<main>
+    @if (in_array('legend', $options))
+        @include('legend', compact('types_in_use', 'types'))
     @endif
-    <main>
-        @if (in_array('legend', $options))
-            @include('legend', compact('types_in_use', 'types'))
-        @endif
-        @if ($group_by === 'day-region')
-            @foreach ($days as $day => $regions)
-                <div class="day">
-                    <h1>{{ $day }}</h1>
-                    @foreach ($regions as $region => $meetings)
-                        <div class="region">
-                            @if ($region)
-                                <h3>{{ $region }}</h3>
-                            @endif
-                            @foreach ($meetings as $meeting)
-                                @include('meeting', compact('meeting', 'region'))
-                            @endforeach
-                        </div>
-                    @endforeach
-                </div>
-            @endforeach
-        @elseif ($group_by === 'region-day')
-            @foreach ($regions as $region => $days)
-                <div class="region">
-                    <h1>{{ $region }}</h1>
-                    @foreach ($days as $day => $meetings)
-                        <div class="day">
-                            @if ($day)
-                                <h3>{{ $day }}</h3>
-                            @endif
-                            @foreach ($meetings as $meeting)
-                                @include('meeting', compact('meeting', 'region'))
-                            @endforeach
-                        </div>
-                    @endforeach
-                </div>
-            @endforeach
-        @else
-            @foreach ($days as $day => $meetings)
-                <div class="day">
-                    <h1>{{ $day }}</h1>
-                    @foreach ($meetings as $meeting)
-                        @include('meeting', compact('meeting'))
-                    @endforeach
-                </div>
-            @endforeach
-        @endif
-    </main>
-</body>
+    @if ($group_by === 'day-region')
+        @foreach ($days as $day => $regions)
+            @if (!$loop->first)
+                @php
+                    echo '</div></div>';
+                    $row++;
+                    $column = 1;
+                    $num_column_lines = 0;
+                @endphp
+            @endif
+            <div class="row"><h1 class="meeting-day">{{ strtoupper($day) }} MEETINGS</h1><div class="column">
+            @php
+                list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines);
+                $num_column_lines++;
+            @endphp
 
+            @foreach ($regions as $region => $meetings)
+                @php
+                    list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines, $day);
+                    echo '<div class="region">';
+                    if ($region) {
+                        echo '<h3>' . $region . '</h3></div>';
+                        $num_column_lines++;
+                    }
+                @endphp
+
+                @foreach ($meetings as $meeting)
+                    @php
+                        $num_meeting_lines = get_num_meeting_lines($meeting);
+                        list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines, $day);
+                        $num_column_lines += $num_meeting_lines;
+                    @endphp
+                    @include('meeting', compact('meeting', 'region'))
+                @endforeach
+            @endforeach
+        @endforeach
+        </div></div>
+    @elseif ($group_by === 'region-day')
+        @foreach ($regions as $region => $days)
+            @if (!$loop->first)
+                <?php list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines); ?>
+            @else
+                <div class="row"><div class="column"><div class="region"><h1>{{ $region }}</h1></div>
+            @endif
+            <?php $num_column_lines++ ?>
+            @foreach ($days as $day => $meetings)
+                @php
+                    list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines);
+                    $num_column_lines++;
+                @endphp
+                <h3>{{ $day }}</h3>
+                @foreach ($meetings as $meeting)
+                    @php
+                        $num_meeting_lines = get_num_meeting_lines($meeting);
+                        list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines);
+                        $num_column_lines += $num_meeting_lines;
+                    @endphp
+                    @include('meeting', compact('meeting', 'region'))
+                @endforeach
+            @endforeach
+        @endforeach
+        </div></div>
+    @else
+        @foreach ($days as $day => $meetings)
+            @if (!$loop->first)
+                @php
+                    echo '</div></div>';
+                    $row++;
+                    $column = 1;
+                    $num_column_lines = 0;
+                @endphp
+            @endif
+            <div class="row"><h1 class="meeting-day">{{ strtoupper($day) }} MEETINGS</h1><div class="column">
+            @php
+                list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines);
+                $num_column_lines++;
+            @endphp
+            @foreach ($meetings as $meeting)
+                @php
+                    $num_meeting_lines = get_num_meeting_lines($meeting);
+                    list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines, $day);
+                    $num_column_lines += $num_meeting_lines;
+                @endphp
+                @include('meeting-day', compact('meeting'))
+            @endforeach
+        @endforeach
+        </div></div>
+    @endif
+</main>
+</body>
 </html>
