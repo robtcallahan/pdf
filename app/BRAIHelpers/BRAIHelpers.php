@@ -1,9 +1,13 @@
 <?php
 
 // TODO: correct sheet size
-define('LinesPerColumn', round(6.2 * 5.5));
+//define('LinesPerColumn', round(6.2 * 5.5));
 const MaxColumns = 3;
 const MaxCharactersPerLine = 37;
+
+function get_lines_per_column($height) {
+    return round($height / 16);
+}
 
 // determine the number of rows the meeting text will occupy and add that to the number of lines in the column
 function get_num_meeting_lines(mixed $meeting) : int {
@@ -14,27 +18,27 @@ function get_num_meeting_lines(mixed $meeting) : int {
     return substr_count($wrapped_meeting_string, "|") + 2;
 }
 
-function check_new_row_column(int $row, int $column, int $num_column_lines, string $day = ""): array {
-    if (need_new_column($num_column_lines)) {
+function check_new_row_column(int $row, int $column, int $num_column_lines, int $lines_per_column, string $day = ""): array {
+    if (need_new_column($num_column_lines, $lines_per_column)) {
         if (is_last_column($column)) {
+            echo new_row();
             if ($day != "") {
                 echo new_day($day);
-            } else {
-                echo new_row();
             }
             $row++;
             $column = 1;
+            $num_column_lines = 4;
         } else {
             echo new_column();
             $column++;
+            $num_column_lines = 0;
         }
-        $num_column_lines = 0;
     }
     return array($row, $column, $num_column_lines);
 }
 
-function need_new_column(int $num_column_lines) : bool {
-    if ($num_column_lines >= LinesPerColumn) {
+function need_new_column(int $num_column_lines, int $lines_per_column) : bool {
+    if ($num_column_lines >= $lines_per_column) {
         return true;
     }
     return false;
@@ -48,7 +52,7 @@ function is_last_column(int $column) : bool {
 }
 
 function new_day(string $day) : string {
-    return '</div></div><div class="row"><h1 class="meeting-day">' . strtoupper($day) . ' MEETINGS</h1><div class="column">';
+    return '<h1 class="brai-day">' . strtoupper($day) . ' MEETINGS</h1>';
 }
 
 function new_row() : string {
@@ -60,17 +64,17 @@ function new_column() : string {
 }
 
 function new_day_row() : string {
-    return '</div>' . new_row() . '<div class="day">';
+    return printf('</div>%s<div class="day">', new_row());
 }
 
 function new_day_column() : string {
-    return '</div>' . new_column() . '<div class="day">';
+    return printf('</div>%s<div class="day">', new_column());
 }
 
 function new_region_row() : string {
-    return '</div>' . new_day_row() . '<div class="region">';
+    return printf('</div>%s<div class="region">', new_day_row());
 }
 
 function new_region_column() : string {
-    return '</div>' . new_day_column() . '<div class="region">';
+    return printf('</div>%s<div class="region">', new_day_column());
 }

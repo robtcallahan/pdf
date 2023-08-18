@@ -24,7 +24,7 @@
     },
     "autoload": {
         "files": [
-            "app/Helpers/Helpers.php"
+            "app/BRAIHelpers/BRAIHelpers.php"
         ],
         "psr-4": {
             "App\\": "app/",

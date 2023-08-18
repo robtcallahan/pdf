@@ -8,7 +8,6 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Exception;
 
@@ -126,10 +125,10 @@ class Controller extends BaseController
 //        $width = floatval(request('width', 4.25)) * 72;
 //        $height = floatval(request('height', 11)) * 72;
         $width = floatval(request('width', 5.5)) * 96;
-        $height = floatval(request('height', 8.5)) * 72;
+        $height = floatval(request('height', 8.5)) * 96;
 
         $font = request('font') === 'sans-serif' ? 'Helvetica' : 'Georgia';
-        $numbering = request('numbering', false);
+        $numbering = request('numbering', true);
         if ($numbering) $numbering = intval($numbering);
         $language = request('language', 'en');
         $type = request('type', false);
@@ -413,13 +412,10 @@ class Controller extends BaseController
         }
 
         // output HTML
-//        return view('pdf', compact('days', 'font', 'numbering', 'group_by', 'types_in_use', 'regions', 'types', 'options'));
-
-        //output PD
-//        Log::info('height', ['height' => $height]);
+//        return view('pdf', compact('days', 'font', 'numbering', 'group_by', 'types_in_use', 'regions', 'types', 'options', 'numbering', 'height', 'width'));
 
         $pdf = PDF::loadView('pdf', compact('days',
-            'font', 'numbering', 'group_by', 'types_in_use', 'regions', 'types', 'options'))
+            'font', 'numbering', 'group_by', 'types_in_use', 'regions', 'types', 'options', 'numbering', 'height', 'width'))
             ->setPaper([0, 0, $width, $height]);
         return ($stream) ? $pdf->stream() : $pdf->download('directory.pdf');
     }

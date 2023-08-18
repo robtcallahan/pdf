@@ -1,9 +1,13 @@
 <div class="legend">
-    <h1>Meeting Types</h1>
+    <h1>MEETING TYPES</h1>
     @foreach ($types_in_use as $type)
         <div class="type-row">
-            <span class="type">{{ $type }}</span>
-            <span>{{ $types[$type] }}</span>
+            <table style="width: 100%">
+                <tr>
+                    <td style="width: 20%">{{ $type }}</td>
+                    <td>{{ $types[$type] }}</td>
+                </tr>
+            </table>
         </div>
     @endforeach
 </div>

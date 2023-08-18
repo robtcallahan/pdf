@@ -19,3 +19,4 @@ package-lock.json
 .project
 .settings/
 public/json/
+.DS_Store
