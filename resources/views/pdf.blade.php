@@ -92,11 +92,10 @@
         }
 
         .brai-day {
-            border: none;
-            background-color: #e2e0e0;
+            border: 1px solid black;
             margin: 20px 0;
             padding: 4px;
-            text-align: left;
+            text-align: center;
         }
         .brai-day h1 {
             font-size: 20px;
@@ -173,7 +172,7 @@
                     $num_column_lines = 0;
                 @endphp
             @endif
-            <div class="row"><h1 class="brai-day">{{ strtoupper($day) }} MEETINGS</h1><div class="column">
+            <div class="row"><h1 class="brai-day">{{ strtoupper($day) }}</h1><div class="column">
             @php
                 list ($row, $column, $num_column_lines) = check_new_row_column($row, $column, $num_column_lines, LINES_PER_COLUMN);
                 $num_column_lines++;
@@ -229,13 +228,13 @@
         @foreach ($days as $day => $meetings)
             @if ($loop->first)
                 @php
-                    printf('<div class="row"><div class="column"><h1 class="brai-day">%s MEETINGS</h1>', strtoupper($day));
+                    printf('<div class="row"><div class="column"><h1 class="brai-day">%s</h1>', strtoupper($day));
                     $column = 1;
                     $num_column_lines = 1;
                 @endphp
             @else
                 @php
-                    printf('<h1 class="brai-day">%s MEETINGS</h1>', strtoupper($day));
+                    printf('<h1 class="brai-day">%s</h1>', strtoupper($day));
                     $num_column_lines++;
                 @endphp
             @endif
