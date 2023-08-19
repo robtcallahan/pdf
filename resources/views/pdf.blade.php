@@ -141,8 +141,8 @@
             clear: both;
             page-break-after: always;
         }
-        .row:last-child {
-            page-break-after: unset;
+        .row:last-child:after {
+            page-break-after: avoid;
         }
         .column {
             float: left;
