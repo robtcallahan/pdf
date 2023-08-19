@@ -52,7 +52,7 @@ function is_last_column(int $column) : bool {
 }
 
 function new_day(string $day) : string {
-    return '<h1 class="brai-day">' . strtoupper($day) . ' MEETINGS</h1>';
+    return '<h1 class="brai-day">' . strtoupper($day) . '</h1>';
 }
 
 function new_row() : string {
